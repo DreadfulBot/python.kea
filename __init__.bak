@@ -1,0 +1,182 @@
+# ПЭП Esign
+import random
+import math
+import pickle
+import sympy
+from os import urandom
+from math import sqrt
+from itertools import count, islice
+import chilkat
+
+def GetRand(k1):
+    a=random.randint(2**(k1-1),(2**k1)-1)
+    return a
+def primFerma(a,n):
+    if pow(a,n-1,n)==1:
+        return 2
+    else:
+        return 1
+def GetP(q):
+    N=pow(2,768)
+    while(True):
+        p=N*q+1
+        if primFerma(3,p)==2:
+            break
+        else:
+            N+=2
+    return p,N
+def getG(N,q,p):
+    count=0
+    while (True):
+        a=random.randint(2,p)
+        g=pow(a,N,q)
+        if g==1:
+            print("(((")
+            continue
+        else:
+            break
+    return g
+
+
+def keyGeneration():
+    # p - простое, p >= 1024 бит
+    # q - делитель p-1
+    # size_p = 1024
+    # min_p = 2 ** (size_p - 1)
+    # max_p = 2 ** size_p - 1
+
+    # size_q = 160
+    # min_q = 2 ** (size_q - 1)
+    # max_q = 2 ** size_q - 1
+
+    # p = -1
+    # q = -1
+    # index = min_p // min_q
+
+    # work
+
+    q = GetRand(1024)
+    print(q)
+    p, N = GetP(q)
+    print(p)
+    g = getG(N, q, p)
+
+    # dsa = chilkat.CkDsa()
+    # success = dsa.GenKey(1024)
+    # if (success != True):
+    #     print(dsa.lastErrorText())
+    #
+    # p = int(dsa.hexP(), 16)
+    # q = int(dsa.hexQ(), 16)
+
+    # p = 71
+    # q = 7
+
+    print ('p[%d] - %d' % (p.bit_length(), p))
+    print ('q[%d] - %d' % (q.bit_length(), q))
+
+    N = (p-1) // q
+
+    g = 1
+    while(g == 1):
+        a = random.randint(2, p)
+        g = pow(a, N)
+        print('\ra - %d | g - %d' % (a, g), sep=' ', end='', flush=True)
+
+
+    # # alpha
+    # index = 2
+    # t = index
+    # while(t != 1 and index < p):
+    #     t = pow(index, q, p)
+    #     print('\r%d\%d' % (index, p), sep=' ', end='',flush=True)
+    #     index += 1
+    #
+    # if(index < p-1):
+    #     alpha = index
+    # else:
+    #     print('error finding index')
+    #
+    # print('pum')
+    #alpha порядка q
+    # index = 1
+    # while(index < sqrt(p)):
+    #     print('%d/%d' % (index, sqrt(p)))
+    #     if(p % index == 0):
+    #         if(pow(q, index) == 1):
+    #             break
+    #     index += 1
+
+    # start = 2
+    # end = 70
+    #
+    # while(start < end):
+    #     t = pow(start, 7, p)
+    #     if(t == 1):
+    #         break
+    #     start += 1
+    #
+    #
+    # alpha = 20
+
+    # alpha = int.from_bytes(urandom(q.bit_length() // 8), 'big')
+    # print('alpha[%d] - %d' % (alpha.bit_length(), alpha))
+
+    # a, b
+    # 1 <= a <= p-2
+    # 1 <= b <= p-2
+
+    a = random.randint(1, p-2)
+    b = random.randint(1, p-2)
+
+    # beta_a, beta_b
+    beta_a = pow(alpha, a, p)
+    beta_b = pow(alpha, b, p)
+
+    # x, y
+    x = random.randint(1, p-2)
+    y = random.randint(1, p-2)
+
+    return beta_a, beta_b, a, b, alpha, x, y, p, q
+
+# __MAIN__
+beta_a, beta_b, a, b, alpha, x, y, p, q = keyGeneration()
+
+print('Параметры успешно сгенерированы:\n'
+        'beta_a[%d] - %d\n'
+        'beta_b[%d] - %d\n'
+        'a[%d] - %d\n'
+        'b[%d] - %d\n'
+        'alpha[%d] - %d\n'
+        'x[%d] - %d\n'
+        'y[%d] - %d\n'
+        'p[%d] - %d\n'
+        'q[%d] - %d' %
+        (
+        beta_a.bit_length(), beta_a,
+        beta_b.bit_length(), beta_b,
+        a.bit_length(), a,
+        b.bit_length(), b,
+        alpha.bit_length(), alpha,
+        x.bit_length(), x,
+        y.bit_length(), y,
+        p.bit_length(), p,
+        q.bit_length(), q))
+
+# for client
+pickle.dump(a, open('client/keys/a.key', 'wb'))
+pickle.dump(beta_a, open('client/keys/beta_a.key', 'wb'))
+pickle.dump(p, open('client/keys/p.key', 'wb'))
+pickle.dump(x, open('client/keys/x.key', 'wb'))
+pickle.dump(alpha, open('client/keys/alpha.key', 'wb'))
+pickle.dump(beta_b, open('client/keys/beta_b.key', 'wb'))
+pickle.dump(q, open('client/keys/q.key', 'wb'))
+
+# for server
+pickle.dump(b, open('server/keys/b.key', 'wb'))
+pickle.dump(beta_b, open('server/keys/beta_b.key', 'wb'))
+pickle.dump(p, open('server/keys/p.key', 'wb'))
+pickle.dump(y, open('server/keys/y.key', 'wb'))
+pickle.dump(alpha, open('server/keys/alpha.key', 'wb'))
+pickle.dump(beta_a, open('server/keys/beta_a.key', 'wb'))
+pickle.dump(q, open('server/keys/q.key', 'wb'))
